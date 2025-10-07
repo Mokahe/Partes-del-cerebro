@@ -14,7 +14,7 @@ quiz_data = [
         "options": ["Tálamo", "Hipocampo", "Cerebelo", "Bulbo Raquídeo"],
         "correct_index": 2,
         "rationale_correct": "¡Correcto! El Cerebelo es fundamental para coordinar el movimiento voluntario, el equilibrio y la precisión motora.",
-        "rationale_incorrect": "Incorrecto. El Cerebelo controla la coordinación y el equilibrio. Las otras estructuras tienen funciones sensoriales, de memoria o vitales. ¡Debes acertar para avanzar!"
+        "rationale_incorrect": "Incorrecto. El Cerebelo controla la coordinación y el equilibrio. Las otras estructuras tienen funciones sensoriales (Tálamo), de memoria (Hipocampo) o vitales (Bulbo Raquídeo). ¡Debes acertar para avanzar!"
     },
     {
         "question": "¿Cuál componente del tronco encefálico regula funciones vitales e involuntarias como la respiración y el ritmo cardíaco?",
@@ -74,23 +74,36 @@ quiz_data = [
     }
 ]
 
+# --- FUNCIÓN PARA REINICIAR EL ESTADO ---
+def reset_quiz():
+    """Limpia el estado de la sesión para reiniciar el quiz."""
+    st.session_state.current_q = 0
+    st.session_state.score = 0
+    st.session_state.feedback = ""
+    st.session_state.attempt_count = 0
+    st.rerun()
+
 # --- 2. INICIALIZAR EL ESTADO DE LA SESIÓN ---
-# 'current_q': Índice de la pregunta actual.
-# 'score': Puntuación (número de aciertos).
-# 'attempt_count': Número de intentos en la pregunta actual.
-# 'feedback': Mensaje de retroalimentación.
 if 'current_q' not in st.session_state:
     st.session_state.current_q = 0
     st.session_state.score = 0
     st.session_state.feedback = ""
     st.session_state.attempt_count = 0 
 
-# --- 3. CONFIGURACIÓN DE LA PÁGINA ---
+# --- 3. CONFIGURACIÓN DE LA PÁGINA Y BARRA LATERAL ---
 st.set_page_config(
     page_title="Quiz sobre las Partes del Cerebro",
     layout="centered"
 )
 st.title("🧠 Quiz Interactivo: Las Partes del Cerebro")
+
+# Botón de Reinicio en la barra lateral
+st.sidebar.header("Opciones del Quiz")
+if st.sidebar.button("Reiniciar Quiz (Reinicia Puntuación)"):
+    reset_quiz()
+
+st.sidebar.info(f"Progreso: {st.session_state.current_q} / {len(quiz_data)}")
+st.sidebar.metric("Aciertos hasta ahora", st.session_state.score)
 
 # --- 4. LÓGICA DEL CUESTIONARIO ---
 
@@ -105,4 +118,61 @@ if st.session_state.current_q >= len(quiz_data):
     if st.session_state.score == len(quiz_data):
         st.balloons()
         st.success("¡Felicidades! Tienes un conocimiento experto del cerebro.")
-st.info("¡Buen trabajo! Has completado el cuestionario. Puedes reiniciar para mejorar tu puntuación.")
+    else:
+        st.info("¡Buen trabajo! Has completado el cuestionario. Puedes usar el botón de reinicio para mejorar tu puntuación.")
+
+# 4.2. Mostrar pregunta actual
+else:
+    current_index = st.session_state.current_q
+    q = quiz_data[current_index]
+
+    st.subheader(f"Pregunta {current_index + 1} de {len(quiz_data)}")
+    st.write(q["question"])
+
+    # Mostrar retroalimentación si existe
+    if st.session_state.feedback:
+        if st.session_state.feedback.startswith("¡Correcto"):
+            st.success(st.session_state.feedback)
+        else:
+            st.error(st.session_state.feedback)
+        st.session_state.feedback = "" # Limpiar el feedback para la siguiente interacción
+
+    # Usar un formulario para agrupar la pregunta y el botón de envío
+    with st.form(key=f'q_form_{current_index}'):
+        user_choice = st.radio(
+            "Selecciona tu respuesta:",
+            options=q["options"],
+            index=None,
+            key=f'radio_{current_index}'
+        )
+        
+        # Botón de envío
+        submitted = st.form_submit_button("Responder")
+
+    # 4.3. Lógica de retroalimentación y avance (Solo si se envía)
+    if submitted:
+        if user_choice is None:
+            st.warning("Por favor, selecciona una opción antes de responder.")
+        
+        # Verificar si se seleccionó alguna opción válida
+        elif user_choice in q["options"]:
+            user_index = q["options"].index(user_choice)
+            st.session_state.attempt_count += 1
+            
+            # CASO 1: RESPUESTA CORRECTA
+            if user_index == q["correct_index"]:
+                st.session_state.score += 1
+                st.session_state.feedback = q["rationale_correct"]
+                
+                # REQUISITO: Si se responde correctamente, pasar al siguiente item
+                st.session_state.current_q += 1
+                st.session_state.attempt_count = 0 # Resetear intentos
+                st.rerun() # Rerun para mostrar la siguiente pregunta
+                
+
+            # CASO 2: RESPUESTA INCORRECTA
+            else:
+                st.session_state.feedback = q["rationale_incorrect"]
+                # REQUISITO: Si es incorrecta, NO pasar al siguiente item.
+                # La pregunta actual (current_q) se mantiene.
+                st.rerun() # Rerun para mostrar el feedback de error
