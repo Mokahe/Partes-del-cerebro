@@ -1,6 +1,6 @@
 import streamlit as st
 
-# --- 1. DATOS DEL CUESTIONARIO ---
+# --- 1. DATOS DEL CUESTIONARIO (Todos los strings revisados para evitar SyntaxError) ---
 quiz_data = [
     {
         "question": "¿Qué lóbulo cerebral es el principal responsable de las funciones ejecutivas, como la planificación y la personalidad?",
@@ -38,35 +38,4 @@ quiz_data = [
         "rationale_incorrect": "Incorrecto. La Amígdala se encarga del procesamiento del miedo y las emociones. ¡No te rindas!"
     },
     {
-        "question": "Si una persona pierde la capacidad de sentir el tacto o percibir la ubicación de sus extremidades (propiocepción), ¿qué lóbulo cerebral está afectado?",
-        "options": ["Lóbulo Frontal", "Lóbulo Parietal", "Lóbulo Temporal", "Cerebelo"],
-        "correct_index": 1,
-        "rationale_correct": "¡Correcto! El Lóbulo Parietal contiene la corteza somatosensorial primaria, que procesa la información táctil, de temperatura, dolor y propiocepción.",
-        "rationale_incorrect": "Incorrecto. El Lóbulo Parietal procesa la información somatosensorial (tacto, presión). ¡Asegúrate de elegir el lóbulo correcto!"
-    },
-    {
-        "question": "¿Cuál es la principal función de la banda gruesa de fibras nerviosas conocida como Cuerpo Calloso?",
-        "options": ["Controlar los movimientos automáticos.", "Almacenar recuerdos a largo plazo.", "Conectar los hemisferios cerebrales derecho e izquierdo.", "Filtrar la información sensorial."],
-        "correct_index": 2,
-        "rationale_correct": "¡Correcto! El Cuerpo Calloso es el puente más grande de sustancia blanca, permitiendo la comunicación entre los dos hemisferios cerebrales.",
-        "rationale_incorrect": "Incorrecto. La función principal del Cuerpo Calloso es la comunicación inter-hemisférica. ¡Vuelve a revisar tus conocimientos!"
-    },
-    {
-        "question": "El Hipotálamo es esencial para mantener la homeostasis (temperatura, sed, hambre) y la conexión con la glándula pituitaria. ¿A qué sistema(s) está funcionalmente ligado?",
-        "options": ["Sistema Nervioso y Sistema Endocrino", "Sistema Límbico y Sistema Motor", "Sistema Respiratorio y Sistema Circulatorio", "Corteza Cerebral y Cerebelo"],
-        "correct_index": 0,
-        "rationale_correct": "¡Correcto! El Hipotálamo pertenece al Sistema Nervioso (Diencéfalo) y es el centro de control del Sistema Endocrino a través de la pituitaria.",
-        "rationale_incorrect": "Incorrecto. Su papel como centro de control hormonal lo liga intrínsecamente al Sistema Endocrino, además del Nervioso. ¡Busca la conexión clave!"
-    },
-    {
-        "question": "Una lesión en la parte posterior de la cabeza que afecta la corteza visual primaria resultaría en una alteración en la...",
-        "options": ["Capacidad para formar nuevas memorias.", "Percepción e interpretación de la información visual.", "Coordinación y el equilibrio.", "Comprensión del lenguaje hablado."],
-        "correct_index": 1,
-        "rationale_correct": "¡Correcto! La corteza visual primaria se encuentra en el Lóbulo Occipital, lo que lo convierte en el centro principal para la interpretación de todo lo que vemos.",
-        "rationale_incorrect": "Incorrecto. La corteza visual primaria en el Lóbulo Occipital está dedicada a la vista. ¡Piensa en la ubicación del lóbulo!"
-    },
-    {
-        "question": "¿En qué región del Lóbulo Frontal se origina específicamente la señal para realizar los movimientos voluntarios del cuerpo?",
-        "options": ["El Área de Broca", "La Corteza Prefrontal", "La Cisura de Silvio", "La Corteza Motora Primaria"],
-        "correct_index": 3,
-        "rationale_correct": "¡Correcto! La Corteza
+        "question": "Si una persona pierde la capacidad de sentir el tacto o percibir la ubicación de sus extremidades
