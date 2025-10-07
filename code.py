@@ -52,4 +52,142 @@ quiz_data = [
         "rationale_incorrect": "Incorrecto. La función principal del Cuerpo Calloso es la comunicación inter-hemisférica. ¡Vuelve a revisar tus conocimientos!"
     },
     {
-        "question
+        "question": "El Hipotálamo es esencial para mantener la homeostasis (temperatura, sed, hambre) y la conexión con la glándula pituitaria. ¿A qué sistema(s) está funcionalmente ligado?",
+        "options": ["Sistema Nervioso y Sistema Endocrino", "Sistema Límbico y Sistema Motor", "Sistema Respiratorio y Sistema Circulatorio", "Corteza Cerebral y Cerebelo"],
+        "correct_index": 0,
+        "rationale_correct": "¡Correcto! El Hipotálamo pertenece al Sistema Nervioso (Diencéfalo) y es el centro de control del Sistema Endocrino a través de la pituitaria.",
+        "rationale_incorrect": "Incorrecto. Su papel como centro de control hormonal lo liga intrínsecamente al Sistema Endocrino, además del Nervioso. ¡Busca la conexión clave!"
+    },
+    {
+        "question": "Una lesión en la parte posterior de la cabeza que afecta la corteza visual primaria resultaría en una alteración en la...",
+        "options": ["Capacidad para formar nuevas memorias.", "Percepción e interpretación de la información visual.", "Coordinación y el equilibrio.", "Comprensión del lenguaje hablado."],
+        "correct_index": 1,
+        "rationale_correct": "¡Correcto! La corteza visual primaria se encuentra en el Lóbulo Occipital, lo que lo convierte en el centro principal para la interpretación de todo lo que vemos.",
+        "rationale_incorrect": "Incorrecto. La corteza visual primaria en el Lóbulo Occipital está dedicada a la vista. ¡Piensa en la ubicación del lóbulo!"
+    },
+    {
+        "question": "¿En qué región del Lóbulo Frontal se origina específicamente la señal para realizar los movimientos voluntarios del cuerpo?",
+        "options": ["El Área de Broca", "La Corteza Prefrontal", "La Cisura de Silvio", "La Corteza Motora Primaria"],
+        "correct_index": 3,
+        "rationale_correct": "¡Correcto! La Corteza Motora Primaria, ubicada en la parte posterior del Lóbulo Frontal, es el origen del control y planificación de los movimientos corporales voluntarios.",
+        "rationale_incorrect": "Incorrecto. La Corteza Motora Primaria controla el movimiento. El Área de Broca es para el habla; la Corteza Prefrontal, para la planificación. ¡Una vez más!"
+    }
+]
+
+# --- FUNCIÓN PARA REINICIAR EL ESTADO ---
+def reset_quiz():
+    """Limpia el estado de la sesión para reiniciar el quiz."""
+    for key in list(st.session_state.keys()):
+        del st.session_state[key]
+    st.rerun()
+
+# --- FUNCIÓN PARA AVANZAR A LA SIGUIENTE PREGUNTA ---
+def advance_question():
+    """Incrementa la pregunta actual y resetea las banderas de estado."""
+    st.session_state.current_q += 1
+    st.session_state.correct_answered = False
+    st.session_state.feedback = ""
+    st.rerun()
+
+# --- 2. INICIALIZAR EL ESTADO DE LA SESIÓN ---
+if 'current_q' not in st.session_state:
+    st.session_state['current_q'] = 0
+    st.session_state['score'] = 0
+    st.session_state['feedback'] = ""
+    st.session_state['attempt_count'] = 0
+    # Nueva bandera para controlar la retroalimentación antes de avanzar
+    st.session_state['correct_answered'] = False 
+
+# --- 3. CONFIGURACIÓN DE LA PÁGINA Y BARRA LATERAL ---
+st.set_page_config(
+    page_title="Quiz sobre las Partes del Cerebro",
+    layout="centered"
+)
+st.title("🧠 Quiz Interactivo: Las Partes del Cerebro")
+
+# La sección de reinicio de la barra lateral se ELIMINA para forzar el reinicio al final.
+
+# Mostrar progreso en la barra lateral
+total_questions = len(quiz_data)
+st.sidebar.header("Progreso")
+st.sidebar.info(f"Pregunta: {st.session_state.current_q} / {total_questions}")
+st.sidebar.metric("Aciertos totales", st.session_state.score)
+
+# --- 4. LÓGICA DEL CUESTIONARIO ---
+
+# 4.1. Mostrar resultado final
+if st.session_state.current_q >= total_questions:
+    st.header("¡Cuestionario Terminado! 🎉")
+    
+    if st.session_state.score == total_questions:
+        st.balloons()
+        st.success("¡Felicidades! Tienes un conocimiento experto del cerebro.")
+    else:
+        st.info("¡Buen trabajo! Has completado el cuestionario.")
+
+    st.metric(
+        label="Puntuación Final (Total de Aciertos)",
+        value=f"{st.session_state.score} / {total_questions}"
+    )
+
+    # REQUISITO: El botón de reiniciar SOLO aparece al finalizar
+    if st.button("Reiniciar Cuestionario"):
+        reset_quiz()
+
+# 4.2. Mostrar pregunta actual
+else:
+    current_index = st.session_state.current_q
+    q = quiz_data[current_index]
+
+    st.subheader(f"Pregunta {current_index + 1} de {total_questions}")
+    st.write(q["question"])
+    
+    # 4.2.1 Mostrar Retroalimentación
+    if st.session_state.feedback:
+        if st.session_state.feedback.startswith("¡Correcto"):
+            st.success(st.session_state.feedback)
+        else:
+            st.error(st.session_state.feedback)
+
+    # 4.2.2 Botón de avance
+    # El botón "Siguiente Pregunta" SOLO aparece si la respuesta fue CORRECTA en la interacción anterior
+    if st.session_state.correct_answered:
+        st.button("Siguiente Pregunta", on_click=advance_question)
+    
+    # 4.2.3 Formulario de respuesta (oculto si ya se acertó)
+    if not st.session_state.correct_answered:
+        with st.form(key=f'q_form_{current_index}'):
+            radio_key = f'radio_{current_index}'
+            
+            user_choice = st.radio(
+                "Selecciona tu respuesta:",
+                options=q["options"],
+                index=None,
+                key=radio_key
+            )
+            
+            submitted = st.form_submit_button("Responder")
+
+        # 4.3. Lógica de evaluación
+        if submitted:
+            if user_choice is None:
+                st.warning("Por favor, selecciona una opción antes de responder.")
+            
+            elif user_choice in q["options"]:
+                user_index = q["options"].index(user_choice)
+                
+                # CASO 1: RESPUESTA CORRECTA
+                if user_index == q["correct_index"]:
+                    st.session_state.score += 1
+                    st.session_state.feedback = q["rationale_correct"]
+                    
+                    # El avance se retrasa hasta que se pulse el botón "Siguiente Pregunta"
+                    st.session_state.correct_answered = True 
+                    st.rerun() 
+                    
+                # CASO 2: RESPUESTA INCORRECTA
+                else:
+                    st.session_state.feedback = q["rationale_incorrect"]
+                    st.session_state.attempt_count += 1
+                    # Se mantiene en la pregunta y solo se muestra el feedback
+                    st.rerun()
