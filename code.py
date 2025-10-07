@@ -105,5 +105,4 @@ if st.session_state.current_q >= len(quiz_data):
     if st.session_state.score == len(quiz_data):
         st.balloons()
         st.success("¡Felicidades! Tienes un conocimiento experto del cerebro.")
-    else:
 st.info("¡Buen trabajo! Has completado el cuestionario. Puedes reiniciar para mejorar tu puntuación.")
