@@ -74,37 +74,22 @@ quiz_data = [
     }
 ]
 
-# --- FUNCIÓN PARA REINICIAR EL ESTADO ---
+# --- FUNCIÓN PARA REINICIAR EL ESTADO (Mejorada para garantizar current_q = 0) ---
 def reset_quiz():
     """Limpia el estado de la sesión para reiniciar el quiz."""
+    # Eliminamos TODAS las claves existentes de la sesión
     for key in list(st.session_state.keys()):
         del st.session_state[key]
-    st.rerun()
-
-# --- 2. INICIALIZAR EL ESTADO DE LA SESIÓN ---
-if 'current_q' not in st.session_state:
+    
+    # Y luego reinicializamos las claves necesarias a sus valores iniciales
     st.session_state['current_q'] = 0
     st.session_state['score'] = 0
     st.session_state['feedback'] = ""
     st.session_state['answered'] = False
     st.session_state['incorrect_questions'] = [] 
+    
+    st.rerun()
 
-# --- 3. CONFIGURACIÓN DE LA PÁGINA Y BARRA LATERAL ---
-st.set_page_config(
-    page_title="Quiz sobre las Partes del Cerebro",
-    layout="centered"
-)
-st.title("🧠 Quiz Interactivo: Las Partes del Cerebro")
-
-# Botón de Reinicio en la barra lateral
-st.sidebar.header("Opciones del Quiz")
-if st.sidebar.button("Reiniciar Quiz (Borrar Progreso)"):
-    reset_quiz()
-
-# Mostrar progreso en la barra lateral
-total_questions = len(quiz_data)
-st.sidebar.header("Progreso")
-st.sidebar.info(f"Pregunta: {st.session_state.current_q} / {total_questions}")
-st.sidebar.metric("Aciertos totales", st.session_state.score)
-
-# --- 4.
+# --- 2. INICIALIZAR EL ESTADO DE LA SESIÓN ---
+if 'current_q' not in st.session_state:
+    st.session_state['current_q'] = 0
