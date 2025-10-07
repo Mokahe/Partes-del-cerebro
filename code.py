@@ -74,19 +74,11 @@ quiz_data = [
     }
 ]
 
-# --- FUNCIÓN PARA REINICIAR EL ESTADO ---
+# --- FUNCIÓN PARA REINICIAR EL ESTADO (Ya no es un callback, pero mantiene el nombre) ---
 def reset_quiz():
     """Limpia el estado de la sesión para reiniciar el quiz."""
     for key in list(st.session_state.keys()):
         del st.session_state[key]
-    st.rerun()
-
-# --- FUNCIÓN PARA AVANZAR A LA SIGUIENTE PREGUNTA ---
-def advance_question():
-    """Incrementa la pregunta actual y resetea las banderas de estado."""
-    st.session_state.current_q += 1
-    st.session_state.correct_answered = False
-    st.session_state.feedback = ""
     st.rerun()
 
 # --- 2. INICIALIZAR EL ESTADO DE LA SESIÓN ---
@@ -95,7 +87,6 @@ if 'current_q' not in st.session_state:
     st.session_state['score'] = 0
     st.session_state['feedback'] = ""
     st.session_state['attempt_count'] = 0
-    # Nueva bandera para controlar la retroalimentación antes de avanzar
     st.session_state['correct_answered'] = False 
 
 # --- 3. CONFIGURACIÓN DE LA PÁGINA Y BARRA LATERAL ---
@@ -104,8 +95,6 @@ st.set_page_config(
     layout="centered"
 )
 st.title("🧠 Quiz Interactivo: Las Partes del Cerebro")
-
-# La sección de reinicio de la barra lateral se ELIMINA para forzar el reinicio al final.
 
 # Mostrar progreso en la barra lateral
 total_questions = len(quiz_data)
@@ -141,7 +130,7 @@ else:
 
     st.subheader(f"Pregunta {current_index + 1} de {total_questions}")
     st.write(q["question"])
-    
+
     # 4.2.1 Mostrar Retroalimentación
     if st.session_state.feedback:
         if st.session_state.feedback.startswith("¡Correcto"):
@@ -150,9 +139,15 @@ else:
             st.error(st.session_state.feedback)
 
     # 4.2.2 Botón de avance
-    # El botón "Siguiente Pregunta" SOLO aparece si la respuesta fue CORRECTA en la interacción anterior
+    # El botón "Siguiente Pregunta" SOLO aparece si la respuesta fue CORRECTA
     if st.session_state.correct_answered:
-        st.button("Siguiente Pregunta", on_click=advance_question)
+        # Aquí eliminamos el on_click y manejamos la lógica directamente
+        if st.button("Siguiente Pregunta"):
+            # Lógica de avance (que estaba en advance_question)
+            st.session_state.current_q += 1
+            st.session_state.correct_answered = False
+            st.session_state.feedback = ""
+            st.rerun()
     
     # 4.2.3 Formulario de respuesta (oculto si ya se acertó)
     if not st.session_state.correct_answered:
@@ -175,19 +170,19 @@ else:
             
             elif user_choice in q["options"]:
                 user_index = q["options"].index(user_choice)
+                st.session_state.attempt_count += 1
                 
                 # CASO 1: RESPUESTA CORRECTA
                 if user_index == q["correct_index"]:
                     st.session_state.score += 1
                     st.session_state.feedback = q["rationale_correct"]
                     
-                    # El avance se retrasa hasta que se pulse el botón "Siguiente Pregunta"
+                    # Activamos la bandera para mostrar el botón de Siguiente Pregunta
                     st.session_state.correct_answered = True 
                     st.rerun() 
                     
                 # CASO 2: RESPUESTA INCORRECTA
                 else:
                     st.session_state.feedback = q["rationale_incorrect"]
-                    st.session_state.attempt_count += 1
-                    # Se mantiene en la pregunta y solo se muestra el feedback
-                    st.rerun()
+                    # NO AVANCE: El usuario permanece en la misma pregunta.
+                    st.rerun() # Rerun para mostrar el feedback de error
