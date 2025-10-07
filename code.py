@@ -93,3 +93,121 @@ def reset_quiz():
 # --- 2. INICIALIZAR EL ESTADO DE LA SESIÓN ---
 if 'current_q' not in st.session_state:
     st.session_state['current_q'] = 0
+    st.session_state['score'] = 0
+    st.session_state['feedback'] = ""
+    st.session_state['answered'] = False
+    st.session_state['incorrect_questions'] = [] 
+
+# --- 3. CONFIGURACIÓN DE LA PÁGINA Y BARRA LATERAL ---
+st.set_page_config(
+    page_title="Quiz sobre las Partes del Cerebro",
+    layout="centered"
+)
+st.title("🧠 Quiz Interactivo: Las Partes del Cerebro")
+
+# Botón de Reinicio en la barra lateral
+st.sidebar.header("Opciones del Quiz")
+if st.sidebar.button("Reiniciar Quiz (Borrar Progreso)"):
+    reset_quiz()
+
+# Mostrar progreso en la barra lateral
+total_questions = len(quiz_data)
+st.sidebar.header("Progreso")
+st.sidebar.info(f"Pregunta: {st.session_state.current_q} / {total_questions}")
+st.sidebar.metric("Aciertos totales", st.session_state.score)
+
+# --- 4. LÓGICA DEL CUESTIONARIO ---
+
+# 4.1. Mostrar resultado final
+if st.session_state.current_q >= total_questions:
+    st.header("¡Cuestionario Terminado! 🎉")
+    
+    st.metric(
+        label="Puntuación Final (Total de Aciertos)",
+        value=f"{st.session_state.score} / {total_questions}"
+    )
+
+    if st.session_state.score == total_questions:
+        st.balloons()
+        st.success("¡Felicidades! ¡Perfecto! Dominas todas las partes del cerebro.")
+    elif st.session_state.score > 0:
+        st.info("¡Buen trabajo! Has completado el cuestionario. Revisa tus fallos a continuación.")
+    else:
+        st.warning("Has completado el cuestionario. Revisa las explicaciones de tus errores.")
+
+    # --- RETROALIMENTACIÓN DE ERRORES AL FINAL ---
+    if st.session_state.incorrect_questions:
+        st.subheader("📚 Repaso: Respuestas Incorrectas")
+        
+        for q_index in st.session_state.incorrect_questions:
+            q = quiz_data[q_index]
+            
+            with st.expander(f"Pregunta {q_index + 1}: {q['question']}"):
+                st.error("Respuesta Incorrecta:")
+                st.write(q['rationale_incorrect'])
+                st.markdown(f"**Respuesta Correcta:** {q['options'][q['correct_index']]}")
+
+    # Botón de reinicio al finalizar
+    if st.button("Reiniciar Cuestionario"):
+        reset_quiz()
+
+# 4.2. Mostrar pregunta actual (El bloque que resuelve el problema de las preguntas)
+else:
+    current_index = st.session_state.current_q
+    q = quiz_data[current_index]
+
+    st.subheader(f"Pregunta {current_index + 1} de {total_questions}")
+    st.write(q["question"])
+
+    # 4.2.1 Mostrar Retroalimentación y Botón de Avance
+    if st.session_state.answered:
+        # Muestra el feedback
+        if st.session_state.feedback.startswith("¡Correcto"):
+            st.success(st.session_state.feedback)
+        else:
+            st.error(st.session_state.feedback)
+        
+        # Botón para avanzar a la siguiente pregunta
+        if st.button("Siguiente Pregunta"):
+            # Lógica de avance
+            st.session_state.current_q += 1
+            st.session_state.answered = False
+            st.session_state.feedback = ""
+            st.rerun()
+
+    # 4.2.2 Formulario de respuesta (oculto si ya fue respondida)
+    if not st.session_state.answered:
+        with st.form(key=f'q_form_{current_index}'):
+            radio_key = f'radio_{current_index}'
+            
+            user_choice = st.radio(
+                "Selecciona tu respuesta:",
+                options=q["options"],
+                index=None,
+                key=radio_key
+            )
+            
+            submitted = st.form_submit_button("Responder")
+
+        # 4.3. Lógica de evaluación (solo se ejecuta si se envía el formulario)
+        if submitted:
+            if user_choice is None:
+                st.warning("Por favor, selecciona una opción antes de responder.")
+            
+            elif user_choice in q["options"]:
+                user_index = q["options"].index(user_choice)
+                
+                # Evaluación: Solo sumar si es correcto
+                if user_index == q["correct_index"]:
+                    st.session_state.score += 1
+                    st.session_state.feedback = q["rationale_correct"]
+                # Caso Incorrecto: Almacenar índice de la pregunta y dar feedback
+                else:
+                    st.session_state.feedback = q["rationale_incorrect"]
+                    # Almacenamos el índice de la pregunta para el repaso final
+                    if current_index not in st.session_state.incorrect_questions:
+                        st.session_state.incorrect_questions.append(current_index)
+                
+                # Marcamos como respondida para mostrar el feedback y el botón "Siguiente Pregunta"
+                st.session_state.answered = True 
+                st.rerun()
